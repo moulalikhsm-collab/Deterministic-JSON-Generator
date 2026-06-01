@@ -10,25 +10,10 @@ dotenv.config();
 
 console.log("Gemini key exists:", !!process.env.GEMINI_API_KEY);
 
-// Lazy-initialized Gemini Client to prevent app crashes on startup when key is not loaded yet
-let aiClient: GoogleGenAI | null = null;
-function getGeminiClient(): GoogleGenAI {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("GEMINI_API_KEY environment variable is missing. Please set it in Settings > Secrets in the AI Studio panel.");
-  }
-  if (!aiClient) {
-    aiClient = new GoogleGenAI({
-      apiKey,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
-    });
-  }
-  return aiClient;
-}
+// Initialize the GoogleGenAI client with the direct configuration requested
+const ai = new GoogleGenAI({
+  apiKey: "YOUR_NEW_GEMINI_KEY"
+});
 
 // Convert string types to @google/genai Type enum values
 function mapFieldTypeToGenAiType(typeStr: string): Type {
@@ -134,8 +119,7 @@ async function startServer() {
         Please analyze the text above and extract the JSON according to the schema rules.
       `;
 
-      // Call the recommended model 'gemini-3.5-flash'
-      const ai = getGeminiClient();
+      // Call the recommended model 'gemini-3.5-flash' using the global ai client
       const response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
         contents: promptText,
