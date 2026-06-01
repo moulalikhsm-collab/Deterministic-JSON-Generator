@@ -8,25 +8,15 @@ import dotenv from "dotenv";
 // Load environment variables
 dotenv.config();
 
-// Lazy-initialized Gemini Client
-let aiClient: GoogleGenAI | null = null;
-function getGeminiClient(): GoogleGenAI {
-  if (!aiClient) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY environment variable is missing. Please set it in Settings > Secrets in the AI Studio panel.");
-    }
-    aiClient = new GoogleGenAI({
-      apiKey,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
-    });
-  }
-  return aiClient;
-}
+// Initialize the GoogleGenAI client
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  httpOptions: {
+    headers: {
+      'User-Agent': 'aistudio-build',
+    },
+  },
+});
 
 // Convert string types to @google/genai Type enum values
 function mapFieldTypeToGenAiType(typeStr: string): Type {
@@ -72,8 +62,10 @@ async function startServer() {
         return res.status(400).json({ error: "No extraction fields specified" });
       }
 
-      // Initialize Gemini Client safely
-      const ai = getGeminiClient();
+      // Ensure API Key exists before calling the client
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error("GEMINI_API_KEY environment variable is missing. Please set it in Settings > Secrets in the AI Studio panel.");
+      }
 
       // Build the dynamic responseSchema
       const properties: Record<string, any> = {};
