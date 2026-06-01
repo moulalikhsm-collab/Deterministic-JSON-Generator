@@ -7,12 +7,22 @@ import dotenv from "dotenv";
 
 // Load environment variables
 dotenv.config();
-
 console.log("Gemini key exists:", !!process.env.GEMINI_API_KEY);
+console.log("Gemini key length:", process.env.GEMINI_API_KEY?.length || 0);
+console.log(
+  "Gemini key prefix:",
+  process.env.GEMINI_API_KEY?.substring(0, 6) || "NONE"
+);
 
 // Initialize the GoogleGenAI client with the direct configuration requested
+const apiKey = process.env.GEMINI_API_KEY;
+
+if (!apiKey) {
+  throw new Error("GEMINI_API_KEY environment variable is missing");
+}
+
 const ai = new GoogleGenAI({
-  apiKey: "YOUR_NEW_GEMINI_KEY"
+  apiKey,
 });
 
 // Convert string types to @google/genai Type enum values
@@ -119,9 +129,9 @@ async function startServer() {
         Please analyze the text above and extract the JSON according to the schema rules.
       `;
 
-      // Call the recommended model 'gemini-3.5-flash' using the global ai client
+      // Call the recommended model 'gemini-2.5-flash' using the global ai client
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model:"gemini-2.5-flash",
         contents: promptText,
         config: {
           systemInstruction: systemPrompt,
