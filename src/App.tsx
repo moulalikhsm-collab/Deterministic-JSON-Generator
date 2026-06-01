@@ -861,15 +861,49 @@ export default function App() {
             </div>
 
             {/* Error messaging Banner */}
-            {errorMsg && (
-              <div className="p-3 bg-red-950/30 border-b border-red-900/60 text-red-300 text-xs font-mono flex gap-2 items-start">
-                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <span className="font-bold tracking-tight block uppercase">STATION INTERRUPTED</span>
-                  <p className="leading-relaxed text-[11px] text-red-450">{errorMsg}</p>
+            {errorMsg && (() => {
+              const errorLower = errorMsg.toLowerCase();
+              const isApiKeyIssue = errorLower.includes("leak") || errorLower.includes("api_key") || errorLower.includes("api key") || errorLower.includes("permission_denied") || errorLower.includes("403") || errorLower.includes("secrets");
+              return (
+                <div className="p-4 bg-red-950/30 border-b border-red-900/60 text-red-300 text-xs font-mono flex flex-col gap-3">
+                  <div className="flex gap-2 items-start">
+                    <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                    <div className="space-y-0.5 flex-1">
+                      <span className="font-bold tracking-tight block uppercase text-red-400">STATION INTERRUPTED: AUTHENTICATION ERROR</span>
+                      <p className="leading-relaxed text-[11px] text-red-350 whitespace-pre-wrap">{errorMsg}</p>
+                    </div>
+                  </div>
+                  {isApiKeyIssue && (
+                    <div className="p-3 bg-slate-955/40 border border-red-900/40 rounded text-[11px] space-y-2 mt-1">
+                      <div className="font-bold text-red-400 uppercase tracking-wide flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />
+                        TROUBLESHOOTING REPAIR CHECKLIST:
+                      </div>
+                      <p className="text-slate-400 leading-relaxed font-sans text-[10.5px]">
+                        The active key parameter was flagged as compromised or contains invalid signatures. Please fulfill the following instructions to apply the fix:
+                      </p>
+                      <ul className="list-disc pl-4 space-y-1 text-slate-450 font-mono text-[10px]">
+                        <li>
+                          Go to <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-cyan-400 hover:text-cyan-350 underline inline font-bold">ai.google.dev (Get API Key)</a> to secure a fresh key.
+                        </li>
+                        <li>
+                          Find the <strong className="text-slate-350 uppercase">Settings</strong> icon (gear wheel) at the top of the AI Studio workspace control panel.
+                        </li>
+                        <li>
+                          Locate the secrets record marked <code className="text-cyan-400 bg-slate-950 px-1 py-0.5 rounded text-[9.5px]">GEMINI_API_KEY</code>.
+                        </li>
+                        <li>
+                          Replace the compromised key value with your newly generated credentials and save.
+                        </li>
+                        <li>
+                          Retrigger the extraction pipeline again once your variables are stored!
+                        </li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Display Board Area states */}
             <div className="flex-1 p-4 sm:p-5 flex flex-col">

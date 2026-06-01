@@ -157,9 +157,23 @@ async function startServer() {
 
     } catch (error: any) {
       console.error("Extraction error:", error);
+      
+      let errorMsg = "";
+      if (error && typeof error === "object") {
+        errorMsg = error.message || error.statusText || JSON.stringify(error);
+      } else {
+        errorMsg = String(error);
+      }
+
+      // Check if it's an API Key or leaked configuration issue
+      const isLeaked = errorMsg.toLowerCase().includes("leaked") || errorMsg.includes("403") || errorMsg.toLowerCase().includes("permission_denied") || errorMsg.toLowerCase().includes("api key");
+      if (isLeaked) {
+        errorMsg = `Gemini API Authorization Denied: ${errorMsg}. Your GEMINI_API_KEY is inactive, invalid, or reported as leaked. Please update the key in Settings > Secrets in the top AI Studio panel.`;
+      }
+
       res.status(500).json({
         success: false,
-        error: error.message || "An internal error occurred during data extraction.",
+        error: errorMsg,
       });
     }
   });
