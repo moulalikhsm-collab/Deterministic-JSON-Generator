@@ -1,0 +1,6 @@
+{
+  "name": "Data Extraction Engine",
+  "description": "An AI-powered playground that extracts highly structured JSON data from unstructured text using customizable schemas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
