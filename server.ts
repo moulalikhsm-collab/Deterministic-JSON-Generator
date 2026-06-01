@@ -8,6 +8,8 @@ import dotenv from "dotenv";
 // Load environment variables
 dotenv.config();
 
+console.log("Gemini key exists:", !!process.env.GEMINI_API_KEY);
+
 // Initialize the GoogleGenAI client
 const apiKey = process.env.GEMINI_API_KEY;
 
