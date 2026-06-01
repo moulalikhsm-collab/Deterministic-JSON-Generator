@@ -21,6 +21,11 @@ from dotenv import load_dotenv
 # Load API key configuration
 load_dotenv()
 
+api_key = os.getenv("GEMINI_API_KEY")
+
+if not api_key:
+    raise Exception("Failed to load API key")
+
 # We import the modern google-genai SDK
 try:
     from google import genai
