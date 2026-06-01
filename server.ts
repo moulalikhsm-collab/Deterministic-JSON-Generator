@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
@@ -159,6 +160,59 @@ async function startServer() {
       res.status(500).json({
         success: false,
         error: error.message || "An internal error occurred during data extraction.",
+      });
+    }
+  });
+
+  app.post("/api/export-companion", async (req, res) => {
+    try {
+      const { fields, systemInstructions, inputText } = req.body;
+
+      const baseDir = path.join(process.cwd(), "Deterministic-JSON-Generator");
+      
+      // Ensure target directory layout exists
+      if (!fs.existsSync(baseDir)) {
+        fs.mkdirSync(baseDir, { recursive: true });
+      }
+      if (!fs.existsSync(path.join(baseDir, "prompts"))) {
+        fs.mkdirSync(path.join(baseDir, "prompts"), { recursive: true });
+      }
+      if (!fs.existsSync(path.join(baseDir, "examples"))) {
+        fs.mkdirSync(path.join(baseDir, "examples"), { recursive: true });
+      }
+
+      // Write active schemas & configurations
+      if (fields) {
+        fs.writeFileSync(
+          path.join(baseDir, "custom_schema.json"),
+          JSON.stringify(fields, null, 2),
+          "utf-8"
+        );
+      }
+      if (systemInstructions) {
+        fs.writeFileSync(
+          path.join(baseDir, "prompts", "extraction_prompt.txt"),
+          systemInstructions.trim() + "\n",
+          "utf-8"
+        );
+      }
+      if (inputText) {
+        fs.writeFileSync(
+          path.join(baseDir, "examples", "sample_inputs.txt"),
+          inputText.trim() + "\n",
+          "utf-8"
+        );
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Successfully synchronized workspace Python companion models & examples.",
+      });
+    } catch (e: any) {
+      console.error("Export-Companion error:", e);
+      res.status(500).json({
+        success: false,
+        error: e.message || "An internal error occurred writing files to the workspace.",
       });
     }
   });

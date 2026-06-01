@@ -1,0 +1,1 @@
+Extract only information explicitly present in the text. Do not infer, assume, or hallucinate missing values. If a field is unavailable, set it to null. Maintain exact spelling, capitalization, and original values from the text where appropriate.

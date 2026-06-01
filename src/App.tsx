@@ -59,8 +59,13 @@ export default function App() {
   // UI states
   const [copyFeedback, setCopyFeedback] = useState<boolean>(false);
   const [copiedRawFeedback, setCopiedRawFeedback] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<"visual" | "json" | "verify">("visual");
+  const [activeTab, setActiveTab] = useState<"visual" | "json" | "verify" | "python">("visual");
   const [history, setHistory] = useState<ExtractionHistoryItem[]>([]);
+  
+  // Python CLI Workspace Sync state
+  const [isSyncingPython, setIsSyncingPython] = useState<boolean>(false);
+  const [syncSuccess, setSyncSuccess] = useState<boolean>(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   
   // Loaded a history or active run
   const [currentSourceText, setCurrentSourceText] = useState<string>("");
@@ -278,6 +283,38 @@ export default function App() {
     e.stopPropagation();
     const updated = history.filter((h) => h.id !== id);
     saveHistory(updated);
+  };
+
+  // Synchronize dynamic schemas & sample input to the Python companion project inside workspace
+  const handleSyncPythonWorkspace = async () => {
+    setIsSyncingPython(true);
+    setSyncSuccess(false);
+    setSyncError(null);
+    try {
+      const response = await fetch("/api/export-companion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fields: fields,
+          systemInstructions: systemInstructions,
+          inputText: inputText,
+        }),
+      });
+
+      const resData = await response.json();
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.error || "Failed to synchronize companion files.");
+      }
+      setSyncSuccess(true);
+      setTimeout(() => setSyncSuccess(false), 4000);
+    } catch (e: any) {
+      console.error(e);
+      setSyncError(e.message || "Could not connect to the workspace synchronizer.");
+    } finally {
+      setIsSyncingPython(false);
+    }
   };
 
   // Copy structured JSON payload
@@ -733,6 +770,41 @@ export default function App() {
               </details>
             </div>
 
+            {/* Sync Workspace Companion Widget */}
+            <div className="mt-4 pt-3.5 border-t border-slate-800 font-mono">
+              <div className="p-3 bg-slate-950 rounded border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                    <span className="text-slate-200 font-bold tracking-tight text-[11px] uppercase">PYTHON CLI COMPANION WORKSPACE</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 lowercase leading-relaxed">
+                    syncs active shapes & text to <code className="text-slate-300">Deterministic-JSON-Generator/</code>
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                  <button
+                    type="button"
+                    onClick={handleSyncPythonWorkspace}
+                    disabled={isSyncingPython}
+                    className="w-full md:w-auto px-3.5 py-1.5 bg-cyan-955/20 hover:bg-cyan-900/40 disabled:bg-slate-900 disabled:text-slate-600 text-cyan-400 font-bold border border-cyan-800/80 rounded text-[10px] transition-colors cursor-pointer text-center uppercase whitespace-nowrap"
+                  >
+                    {isSyncingPython ? "SYNCING..." : "SYNC WORKSPACE"}
+                  </button>
+                </div>
+              </div>
+              {syncSuccess && (
+                <div className="mt-2 text-center text-[10px] text-emerald-400 font-bold bg-emerald-950/20 border border-emerald-900 py-1 rounded">
+                  ✓ COMPANION REPOSITORY CONFIGURATIONS SYNCHRONIZED SUCCESSFULLY!
+                </div>
+              )}
+              {syncError && (
+                <div className="mt-2 text-center text-[10px] text-red-400 font-bold bg-red-955/20 border border-red-900 py-1 rounded">
+                  × ERROR: {syncError}
+                </div>
+              )}
+            </div>
+
           </div>
 
         </div>
@@ -775,6 +847,14 @@ export default function App() {
                   >
                     <ShieldCheck className="w-3.5 h-3.5" />
                     <span>Verify</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("python")}
+                    className={`px-2.5 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      activeTab === "python" ? "bg-cyan-950/30 border border-cyan-800 text-cyan-400" : "text-slate-500 hover:text-slate-300"
+                    }`}
+                  >
+                    <span>Python CLI</span>
                   </button>
                 </div>
               )}
@@ -1101,6 +1181,68 @@ export default function App() {
 
                   <div className="mt-4 pt-3 text-[9px] font-mono text-slate-500 italic text-center">
                     // audits check variables directly against user constraints. zero-hallucination index guarantee.
+                  </div>
+                </div>
+              )}
+
+              {/* 6. Render Python SDK / CLI Companion Tab */}
+              {!isLoading && extractedData && activeTab === "python" && (
+                <div className="flex-grow flex flex-col justify-between h-full font-mono text-slate-300">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest mb-1">
+                        Companion Workspace Repository
+                      </h3>
+                      <p className="text-[10px] text-slate-400">
+                        Local Python project pre-configured within the workspace root.
+                      </p>
+                    </div>
+
+                    <div className="p-3 bg-slate-950 border border-slate-900 rounded space-y-2">
+                      <div className="text-[10px] uppercase font-bold text-slate-500">Workspace Tree:</div>
+                      <pre className="text-[10px] text-cyan-400 leading-tight">
+{`Deterministic-JSON-Generator/
+├── app.py                      # executable CLI parser
+├── requirements.txt            # system packages checklist
+├── README.md                   # installation guidebook
+├── prompts/
+│   └── extraction_prompt.txt   # dynamic system prompts
+└── examples/
+    └── sample_inputs.txt       # copy of current input text`}
+                      </pre>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="text-[10px] uppercase font-bold text-slate-500">Run Local Inference:</div>
+                      <div className="p-3 bg-slate-950 rounded border border-slate-900/60 overflow-x-auto text-[10px] leading-relaxed">
+                        <span className="text-slate-500 block"># 1. Install dependencies</span>
+                        <span className="text-cyan-300 block">pip install -r requirements.txt</span>
+                        <span className="text-slate-500 block mt-1.5"># 2. Add Gemini API key credentials</span>
+                        <span className="text-cyan-300 block">export GEMINI_API_KEY="your_secret_key"</span>
+                        <span className="text-slate-500 block mt-1.5"># 3. Parse input with custom schema</span>
+                        <span className="text-cyan-300 block">python app.py --schema custom_schema.json --input examples/sample_inputs.txt</span>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-slate-950/40 border border-slate-800 rounded flex gap-2">
+                      <Database className="w-4 h-4 text-slate-550 mt-0.5" />
+                      <div className="text-[10px] leading-loose text-slate-500">
+                        Updates to schemas, prompts, and inputs are reflected dynamically. Click <strong className="text-cyan-400">SYNC WORKSPACE</strong> on the left to push latest browser modifications.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-slate-805 flex items-center justify-between">
+                    <span className="text-[10px] text-slate-500">
+                      Export full stand-alone companion.
+                    </span>
+                    <button
+                      onClick={handleSyncPythonWorkspace}
+                      className="text-cyan-400 hover:text-cyan-350 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 text-cyan-500 ${isSyncingPython ? "animate-spin" : ""}`} />
+                      <span>{isSyncingPython ? "SYNCING..." : "SYNC TO COMPANION"}</span>
+                    </button>
                   </div>
                 </div>
               )}

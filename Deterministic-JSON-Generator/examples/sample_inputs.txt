@@ -1,0 +1,22 @@
+=== EXAMPLE 1: Contact Information ===
+John Doe, Lead AI Architect at Antigravity Inc. Reachable at john.doe@antigravity.ai or cell +1 (555) 019-2834. Lives in San Francisco, CA. Speaks English, Mandarin, and Spanish. Has 12 years of industry experience.
+
+=== EXAMPLE 2: Invoice Receipt ===
+ACME SERVICES CORP.
+INVOICE #INV-2026-98124
+Date Issued: June 1, 2026
+Due Date: July 1, 2026
+Client: Global Tech Ventures LLC
+
+Line Items:
+1. Enterprise Gemini Integration Suite - Qty 1 - Unit Price $12,500.00 - Total $12,500.00
+2. Custom API Implementation Support - Qty 4 - Unit Price $250.00 - Total $1,000.00
+
+Subtotal: $13,500.00
+Tax (8.5%): $1,147.50
+Total Due: $14,647.50
+
+Payment Terms: Net 30 days.
+
+=== EXAMPLE 3: Real Estate Specs ===
+Luxury Condominium Unit 42B at Serene Heights. Located at 742 Evergreen Terrace, Seattle, WA. Boasts 3 premium spacious bedrooms, 2.5 bathrooms, with a total internal area of 1,850 sq ft. Features private high-altitude balcony, heated hardwood floors, and multi-zone HVAC. Estimated original property listing value is $1,250,000. Parking space allocated at slot G-12. Built in 2024.
