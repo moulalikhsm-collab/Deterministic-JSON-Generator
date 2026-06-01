@@ -9,8 +9,14 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // Initialize the GoogleGenAI client
+const apiKey = process.env.GEMINI_API_KEY;
+
+if (!apiKey) {
+  throw new Error("Failed to load API key");
+}
+
 const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
+  apiKey: apiKey,
   httpOptions: {
     headers: {
       'User-Agent': 'aistudio-build',
